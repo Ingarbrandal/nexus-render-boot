@@ -4,10 +4,11 @@ echo "nexus-render-boot: cloning Ingarbrandal/nexus-fish"
 rm -rf /opt/nexus-fish
 git clone --depth 1 "https://x-access-token:${GITHUB_TOKEN}@github.com/Ingarbrandal/nexus-fish.git" /opt/nexus-fish
 cd /opt/nexus-fish/backend
-# Render starter is 512 MiB. playwright (~48 MB wheel) plus pytest/aiosqlite
-# OOM pip (exit 137). Filter them into a temp file; do not edit nexus-fish.
-# Keep paho-mqtt, asyncua, numpy, pyarrow, and the rest of the API runtime.
-grep -vE '^(playwright|pytest-asyncio|pytest|aiosqlite)([=<>!~]|$)' \
+# Render starter is 512 MiB. Fat wheels OOM pip (exit 137). Filter them into
+# a temp file; do not edit nexus-fish. Hosted ENC + IAS do not need
+# numpy/pyarrow (NeruScope parquet) or pdfplumber (document ingest).
+# Keep boto3, paho-mqtt, asyncua, and the fastapi/uvicorn/sqlalchemy stack.
+grep -vE '^(playwright|pytest-asyncio|pytest|aiosqlite|numpy|pyarrow|pdfplumber)([=<>!~]|$)' \
   requirements.txt > /tmp/requirements.render.txt
 PIP_DISABLE_PIP_VERSION_CHECK=1 pip install --no-cache-dir -r /tmp/requirements.render.txt
 if [ "${AIS_LIVE_STREAMS:-0}" = "1" ]; then
